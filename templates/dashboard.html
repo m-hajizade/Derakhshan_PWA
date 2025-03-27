@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .slider-container {
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+            position: relative;
+            border-radius: 10px;
+            z-index: 10;
+        }
+
+        .slider {
+            display: flex;
+            transition: transform 1s ease-in-out;
+        }
+
+        .slider img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border-radius: 10px;
+        }
+
+        .arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 30px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        .arrow-left {
+            left: 10px;
+        }
+
+        .arrow-right {
+            right: 10px;
+        }
+
+        .weather-box {
+            background: #fff;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .weather-box i {
+            font-size: 1.5em;
+            margin: 5px;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            padding: 10px 0;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px;
+            text-decoration: none;
+            color: white;
+            background: #4CAF50;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            flex: 1;
+            max-width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="slider-container">
+        <div class="slider" id="imageSlider">
+            <img src="{{ url_for('static', filename='ad1.jpg') }}" alt="Ad 1">
+            <img src="{{ url_for('static', filename='ad2.jpg') }}" alt="Ad 2">
+            <img src="{{ url_for('static', filename='ad3.jpg') }}" alt="Ad 3">
+            <img src="{{ url_for('static', filename='ad4.jpg') }}" alt="Ad 4">
+        </div>
+        <div class="arrow arrow-left" id="prevBtn">&#10094;</div>
+        <div class="arrow arrow-right" id="nextBtn">&#10095;</div>
+    </div>
+
+    <div class="weather-box">
+        <h4>Weather</h4>
+        <div id="weatherCondition"><i id="weatherIcon" class="fas fa-cloud" style="color:blue"></i></div>
+        <p id="temperature"><i class="fas fa-thermometer-half" style="color:red"></i> --°C</p>
+        <p id="windSpeed"><i class="fas fa-wind" style="color:gray"></i> -- m/s</p>
+        <p id="humidity"><i class="fas fa-tint" style="color:blue"></i> --%</p>
+    </div>
+
+    <div class="btn-container">
+        <a href="{{ url_for('crm') }}" class="btn"><i class="fas fa-users"></i> CRM</a>
+        <a href="#home-page" class="btn" onclick="showHome()"><i class="fas fa-home"></i> Home</a>
+        <a href="{{ url_for('agriculture') }}" class="btn"><i class="fas fa-seedling"></i> Agriculture</a>
+    </div>
+
+    <script>
+
+       if ("serviceWorker" in navigator) {
+           window.addEventListener("load", () => {
+              navigator.serviceWorker.register("/service-worker.js")
+                  .then(() => console.log("Service Worker Registered!"))
+                  .catch((err) => console.log("Service Worker Registration Failed!", err));
+          });
+      }
+
+
+        let currentIndex = 0;
+        const images = document.querySelectorAll(".slider img");
+        const slider = document.getElementById("imageSlider");
+        const totalImages = images.length;
+
+        function nextImage() {
+            currentIndex = (currentIndex + 1) % totalImages;
+            slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+        }
+
+        function prevImage() {
+            currentIndex = (currentIndex - 1 + totalImages) % totalImages;
+            slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+        }
+
+        document.getElementById("nextBtn").addEventListener("click", nextImage);
+        document.getElementById("prevBtn").addEventListener("click", prevImage);
+        setInterval(nextImage, 5000);
+
+        const apiKey = 'd35f0ef29b2f3482813c52f251f776ff';
+        const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=Qazvin,ir&appid=${apiKey}&units=metric`;
+
+        fetch(weatherUrl)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("temperature").innerHTML = `<i class='fas fa-thermometer-half' style='color:red'></i> ${data.main.temp}°C`;
+                document.getElementById("windSpeed").innerHTML = `<i class='fas fa-wind' style='color:gray'></i> ${data.wind.speed} m/s`;
+                document.getElementById("humidity").innerHTML = `<i class='fas fa-tint' style='color:blue'></i> ${data.main.humidity}%`;
+            })
+            .catch(error => console.error('Error fetching weather data:', error));
+    </script>
+</body>
+</html>
