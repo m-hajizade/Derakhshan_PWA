@@ -3,86 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login Page with Install Progress</title>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js" crossorigin="anonymous"></script>
     <style>
         body {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             height: 100vh;
             font-family: Arial, sans-serif;
-            background: url("{{ url_for('static', filename='login_back.jpg') }}") no-repeat center center fixed;
-            background-size: cover
-        }
-
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            backdrop-filter: blur(8px);
+            background: #f4f4f4;
+            margin: 0;
+            overflow: hidden;
         }
 
         .login-box {
-            position: relative;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 30px;
+            background: #fff;
+            padding: 20px;
             border-radius: 10px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            width: 320px;
-            margin: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin-top: 100px;
         }
 
-        input {
-            width: 80%;
-            margin: 15px 0;
+        .login-box input {
+            width: 100%;
             padding: 10px;
-            border: none;
+            margin: 10px 0;
+            border: 1px solid #ccc;
             border-radius: 5px;
-            text-align: center;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
         }
 
-        button {
-            padding: 10px 15px;
-            border: none;
+        .login-box button {
+            width: 100%;
+            padding: 10px;
             background: #4CAF50;
             color: white;
+            border: none;
             border-radius: 5px;
-            cursor: pointer;
-            width: 85%;
-            margin-top: 10px;
+            font-size: 16px;
         }
 
-        button:hover {
-            background: #45a049;
-        }
-
-        h2 {
+        /* Install Link Button */
+        #installLink {
+            display: none;
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
             color: white;
-            font-size: 24px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Makes text readable */
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Progress Bar */
+        #progress-container {
+            width: 80%;
+            max-width: 300px;
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            display: none;
+            padding: 10px;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 10px;
+            background-color: #4CAF50;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="overlay"></div>
+    <!-- Login Form -->
     <div class="login-box">
-        <h2>Derakhshan</h2>
-        {% if error %}
-            <p style="color: red;">{{ error }}</p>
-        {% endif %}
-        <form method="post">
-            <input type="text" name="username" placeholder="Username" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
-            <button type="submit">Login</button>
-        </form>
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button onclick="login()">Login</button>
     </div>
+
+    <!-- Install Link Button -->
+    <button id="installLink">Install App</button>
+
+    <!-- Progress Bar Container -->
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <script>
+        // Register Service Worker
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("/service-worker.js")
+                    .then(() => console.log("Service Worker Registered!"))
+                    .catch((err) => console.log("Service Worker Registration Failed!", err));
+            });
+        }
+
+        // Install PWA Logic with beforeinstallprompt
+        let deferredPrompt;
+        const installLink = document.getElementById('installLink');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the default prompt from appearing
+            e.preventDefault();
+            // Save the event for later
+            deferredPrompt = e;
+            // Show the install link
+            installLink.style.display = 'block';
+
+            // When the user clicks the install link, trigger the prompt with progress
+            installLink.addEventListener('click', (event) => {
+                event.preventDefault(); // Prevent the default behavior
+                showProgressBar(); // Show the progress bar
+                simulateProgress(); // Simulate the installation progress
+            });
+        });
+
+        // Simulate Progress (e.g., PWA install progress)
+        let progress = 0;
+        function simulateProgress() {
+            let interval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = `${progress}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        // Show the install prompt after progress is complete
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === 'accepted') {
+                                console.log('User accepted the install prompt');
+                            } else {
+                                console.log('User dismissed the install prompt');
+                            }
+                            // Reset the deferred prompt
+                            deferredPrompt = null;
+                            hideProgressBar(); // Hide the progress bar after installation
+                        });
+                    }, 500); // Wait for the progress bar to finish
+                }
+            }, 500); // Simulate progress every 0.5 seconds
+        }
+
+        // Show the progress bar
+        function showProgressBar() {
+            progressContainer.style.display = 'block';
+        }
+
+        // Hide the progress bar
+        function hideProgressBar() {
+            progressContainer.style.display = 'none';
+        }
+
+        // Login function (Just for demonstration)
+        function login() {
+            alert("Logged in successfully!");
+            // You can add your actual login logic here
+        }
+    </script>
 </body>
 </html>
-S
