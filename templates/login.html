@@ -1,189 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <meta name="theme-color" content="#4CAF50">
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: Arial, sans-serif;
-            background: url("{{ url_for('static', filename='login_back.jpg') }}") no-repeat center center fixed;
-            background-size: cover;
-            position: relative;
-            margin: 0;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      background: url("{{ url_for('static', filename='login_back.jpg') }}") no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+    }
 
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            backdrop-filter: blur(8px);
-        }
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(8px);
+      z-index: 0;
+    }
 
-        .login-box {
-            position: relative;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            width: 320px;
-            margin: 20px;
-            z-index: 10;
-        }
+    .login-box {
+      position: relative;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      width: 320px;
+      z-index: 1;
+    }
 
-        input {
-            width: 80%;
-            margin: 15px 0;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            text-align: center;
-        }
+    input {
+      width: 80%;
+      margin: 15px 0;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      text-align: center;
+    }
 
-        button {
-            padding: 10px 15px;
-            border: none;
-            background: #4CAF50;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 85%;
-            margin-top: 10px;
-        }
+    button {
+      padding: 10px 15px;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 85%;
+      margin-top: 10px;
+    }
 
-        button:hover {
-            background: #45a049;
-        }
+    button:hover {
+      background: #45a049;
+    }
 
-        h2 {
-            color: white;
-            font-size: 24px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-        }
+    h2 {
+      color: white;
+      font-size: 24px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    }
 
-        #installBtn {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 16px;
-            display: none;
-            z-index: 100; /* Lower z-index if necessary */
-        }
-
-
-        #progressContainer {
-            position: fixed;
-            bottom: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            max-width: 300px;
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 10px;
-            padding: 5px;
-            display: none;
-            z-index: 20;
-        }
-
-        #progressBar {
-            width: 0%;
-            height: 10px;
-            background: #4CAF50;
-            border-radius: 5px;
-        }
-    </style>
+    #installBtn {
+      display: none;
+      margin-top: 15px;
+      background: #2196F3;
+    }
+  </style>
 </head>
 <body>
-    <div class="overlay"></div>
-    <div class="login-box">
-        <h2>Derakhshan</h2>
-        {% if error %}
-            <p style="color: red;">{{ error }}</p>
-        {% endif %}
-        <form method="post">
-            <input type="text" name="username" placeholder="Username" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
-            <button type="submit">Login</button>
-        </form>
-    </div>
+  <div class="overlay"></div>
+  <div class="login-box">
+    <h2>Derakhshan</h2>
+    {% if error %}
+      <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <form method="post">
+      <input type="text" name="username" placeholder="Username" required><br>
+      <input type="password" name="password" placeholder="Password" required><br>
+      <button type="submit">Login</button>
+    </form>
 
-    <!-- Install Button and Progress Bar -->
+    <!-- Install App Button -->
     <button id="installBtn">Install App</button>
-    <div id="progressContainer">
-        <div id="progressBar"></div>
-    </div>
+  </div>
 
-    <script>
-        let deferredPrompt;
-        const installBtn = document.getElementById('installBtn');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
+  <script>
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); // prevent the mini-infobar
-            deferredPrompt = e;
-            installBtn.style.display = 'block'; // show install button
-        });
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'block';
+    });
 
-        installBtn.addEventListener('click', () => {
-            installBtn.disabled = true;
-            showProgress();
-        });
-
-function showProgress() {
-    progressContainer.style.display = 'block';
-    let progress = 0;
-
-    const updateProgress = () => {
-        progress += 10;
-        progressBar.style.width = progress + '%';
-        
-        if (progress < 100) {
-            setTimeout(updateProgress, 300); // Continue after the next event loop tick
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          console.log("App installation accepted");
         } else {
-            setTimeout(() => {
-                progressContainer.style.display = 'none';
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('User accepted the A2HS prompt');
-                        } else {
-                            console.log('User dismissed the A2HS prompt');
-                        }
-                        deferredPrompt = null;
-                    });
-                }
-            }, 300);
+          console.log("App installation dismissed");
         }
-    };
-
-    updateProgress();
-}
-
-
-        // Optional: Register service worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then(reg => console.log('Service Worker Registered:', reg))
-                .catch(err => console.error('Service Worker Failed:', err));
-        }
-    </script>
+        installBtn.style.display = 'none';
+        deferredPrompt = null;
+      }
+    });
+  </script>
 </body>
 </html>
