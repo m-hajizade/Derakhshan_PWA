@@ -109,6 +109,21 @@
             flex: 1;
             max-width: 100px;
         }
+
+        /* Install Link Button */
+        #installLink {
+            display: none;
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -137,17 +152,20 @@
         <a href="{{ url_for('agriculture') }}" class="btn"><i class="fas fa-seedling"></i> Agriculture</a>
     </div>
 
+    <!-- Install Link Button -->
+    <button id="installLink">Install App</button>
+
     <script>
+        // Register Service Worker
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("/service-worker.js")
+                    .then(() => console.log("Service Worker Registered!"))
+                    .catch((err) => console.log("Service Worker Registration Failed!", err));
+            });
+        }
 
-       if ("serviceWorker" in navigator) {
-           window.addEventListener("load", () => {
-              navigator.serviceWorker.register("/service-worker.js")
-                  .then(() => console.log("Service Worker Registered!"))
-                  .catch((err) => console.log("Service Worker Registration Failed!", err));
-          });
-      }
-
-
+        // Image Slider Logic
         let currentIndex = 0;
         const images = document.querySelectorAll(".slider img");
         const slider = document.getElementById("imageSlider");
@@ -167,6 +185,7 @@
         document.getElementById("prevBtn").addEventListener("click", prevImage);
         setInterval(nextImage, 5000);
 
+        // Weather API Fetching
         const apiKey = 'd35f0ef29b2f3482813c52f251f776ff';
         const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=Qazvin,ir&appid=${apiKey}&units=metric`;
 
@@ -178,6 +197,36 @@
                 document.getElementById("humidity").innerHTML = `<i class='fas fa-tint' style='color:blue'></i> ${data.main.humidity}%`;
             })
             .catch(error => console.error('Error fetching weather data:', error));
+
+        // Install PWA Logic with beforeinstallprompt
+        let deferredPrompt;
+        const installLink = document.getElementById('installLink');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the default prompt from appearing
+            e.preventDefault();
+            // Save the event for later
+            deferredPrompt = e;
+            // Show the install link
+            installLink.style.display = 'block';
+
+            // When the user clicks the install link, trigger the prompt
+            installLink.addEventListener('click', (event) => {
+                event.preventDefault(); // Prevent the default behavior
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user's choice
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    // Reset the deferred prompt
+                    deferredPrompt = null;
+                });
+            });
+        });
     </script>
 </body>
 </html>
