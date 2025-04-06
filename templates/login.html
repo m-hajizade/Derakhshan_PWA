@@ -3,179 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page with Install Progress</title>
+    <title>Login</title>
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#4CAF50">
-    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js" crossorigin="anonymous"></script>
     <style>
         body {
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
             height: 100vh;
             font-family: Arial, sans-serif;
-            background: #f4f4f4;
+            background: url("{{ url_for('static', filename='login_back.jpg') }}") no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
             margin: 0;
-            overflow: hidden;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(8px);
         }
 
         .login-box {
-            background: #fff;
-            padding: 20px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            margin-top: 100px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            width: 320px;
+            margin: 20px;
+            z-index: 10;
         }
 
-        .login-box input {
-            width: 100%;
+        input {
+            width: 80%;
+            margin: 15px 0;
             padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        .login-box button {
-            width: 100%;
-            padding: 10px;
-            background: #4CAF50;
-            color: white;
             border: none;
             border-radius: 5px;
-            font-size: 16px;
+            text-align: center;
         }
 
-        /* Install Link Button */
-        #installLink {
-            display: none;
+        button {
+            padding: 10px 15px;
+            border: none;
+            background: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 85%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        h2 {
+            color: white;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        #installBtn {
             position: fixed;
-            bottom: 50px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             background-color: #4CAF50;
             color: white;
-            padding: 15px 30px;
-            border-radius: 5px;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
             font-size: 16px;
+            display: none;
+            z-index: 20;
             cursor: pointer;
         }
 
-        /* Progress Bar */
-        #progress-container {
-            width: 80%;
-            max-width: 300px;
+        #progressContainer {
             position: fixed;
-            bottom: 100px;
+            bottom: 70px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #f1f1f1;
-            border-radius: 5px;
+            width: 80%;
+            max-width: 300px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            padding: 5px;
             display: none;
-            padding: 10px;
+            z-index: 20;
         }
 
-        #progress-bar {
+        #progressBar {
             width: 0%;
             height: 10px;
-            background-color: #4CAF50;
+            background: #4CAF50;
             border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <!-- Login Form -->
+    <div class="overlay"></div>
     <div class="login-box">
-        <h2>Login</h2>
-        <input type="text" id="username" placeholder="Username" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button onclick="login()">Login</button>
+        <h2>Derakhshan</h2>
+        {% if error %}
+            <p style="color: red;">{{ error }}</p>
+        {% endif %}
+        <form method="post">
+            <input type="text" name="username" placeholder="Username" required><br>
+            <input type="password" name="password" placeholder="Password" required><br>
+            <button type="submit">Login</button>
+        </form>
     </div>
 
-    <!-- Install Link Button -->
-    <button id="installLink">Install App</button>
-
-    <!-- Progress Bar Container -->
-    <div id="progress-container">
-        <div id="progress-bar"></div>
+    <!-- Install Button and Progress Bar -->
+    <button id="installBtn">Install App</button>
+    <div id="progressContainer">
+        <div id="progressBar"></div>
     </div>
 
     <script>
-        // Register Service Worker
-        if ("serviceWorker" in navigator) {
-            window.addEventListener("load", () => {
-                navigator.serviceWorker.register("/service-worker.js")
-                    .then(() => console.log("Service Worker Registered!"))
-                    .catch((err) => console.log("Service Worker Registration Failed!", err));
-            });
-        }
-
-        // Install PWA Logic with beforeinstallprompt
         let deferredPrompt;
-        const installLink = document.getElementById('installLink');
-        const progressContainer = document.getElementById('progress-container');
-        const progressBar = document.getElementById('progress-bar');
+        const installBtn = document.getElementById('installBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the default prompt from appearing
-            e.preventDefault();
-            // Save the event for later
+            e.preventDefault(); // prevent the mini-infobar
             deferredPrompt = e;
-            // Show the install link
-            installLink.style.display = 'block';
-
-            // When the user clicks the install link, trigger the prompt with progress
-            installLink.addEventListener('click', (event) => {
-                event.preventDefault(); // Prevent the default behavior
-                showProgressBar(); // Show the progress bar
-                simulateProgress(); // Simulate the installation progress
-            });
+            installBtn.style.display = 'block'; // show install button
         });
 
-        // Simulate Progress (e.g., PWA install progress)
-        let progress = 0;
-        function simulateProgress() {
-            let interval = setInterval(() => {
+        installBtn.addEventListener('click', () => {
+            installBtn.disabled = true;
+            showProgress();
+        });
+
+        function showProgress() {
+            progressContainer.style.display = 'block';
+            let progress = 0;
+            const interval = setInterval(() => {
                 progress += 10;
-                progressBar.style.width = `${progress}%`;
-                
+                progressBar.style.width = progress + '%';
                 if (progress >= 100) {
                     clearInterval(interval);
                     setTimeout(() => {
-                        // Show the install prompt after progress is complete
-                        deferredPrompt.prompt();
-                        deferredPrompt.userChoice.then((choiceResult) => {
-                            if (choiceResult.outcome === 'accepted') {
-                                console.log('User accepted the install prompt');
-                            } else {
-                                console.log('User dismissed the install prompt');
-                            }
-                            // Reset the deferred prompt
-                            deferredPrompt = null;
-                            hideProgressBar(); // Hide the progress bar after installation
-                        });
-                    }, 500); // Wait for the progress bar to finish
+                        progressContainer.style.display = 'none';
+                        if (deferredPrompt) {
+                            deferredPrompt.prompt();
+                            deferredPrompt.userChoice.then((choiceResult) => {
+                                if (choiceResult.outcome === 'accepted') {
+                                    console.log('User accepted the A2HS prompt');
+                                } else {
+                                    console.log('User dismissed the A2HS prompt');
+                                }
+                                deferredPrompt = null;
+                            });
+                        }
+                    }, 300);
                 }
-            }, 500); // Simulate progress every 0.5 seconds
+            }, 300);
         }
 
-        // Show the progress bar
-        function showProgressBar() {
-            progressContainer.style.display = 'block';
-        }
-
-        // Hide the progress bar
-        function hideProgressBar() {
-            progressContainer.style.display = 'none';
-        }
-
-        // Login function (Just for demonstration)
-        function login() {
-            alert("Logged in successfully!");
-            // You can add your actual login logic here
+        // Optional: Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => console.log('Service Worker Registered:', reg))
+                .catch(err => console.error('Service Worker Failed:', err));
         }
     </script>
 </body>
