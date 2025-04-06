@@ -146,31 +146,37 @@
             showProgress();
         });
 
-        function showProgress() {
-            progressContainer.style.display = 'block';
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 10;
-                progressBar.style.width = progress + '%';
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        progressContainer.style.display = 'none';
-                        if (deferredPrompt) {
-                            deferredPrompt.prompt();
-                            deferredPrompt.userChoice.then((choiceResult) => {
-                                if (choiceResult.outcome === 'accepted') {
-                                    console.log('User accepted the A2HS prompt');
-                                } else {
-                                    console.log('User dismissed the A2HS prompt');
-                                }
-                                deferredPrompt = null;
-                            });
+function showProgress() {
+    progressContainer.style.display = 'block';
+    let progress = 0;
+
+    const updateProgress = () => {
+        progress += 10;
+        progressBar.style.width = progress + '%';
+        
+        if (progress < 100) {
+            setTimeout(updateProgress, 300); // Continue after the next event loop tick
+        } else {
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the A2HS prompt');
+                        } else {
+                            console.log('User dismissed the A2HS prompt');
                         }
-                    }, 300);
+                        deferredPrompt = null;
+                    });
                 }
             }, 300);
         }
+    };
+
+    updateProgress();
+}
+
 
         // Optional: Register service worker
         if ('serviceWorker' in navigator) {
