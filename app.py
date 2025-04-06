@@ -55,6 +55,10 @@ def logout():
     session.pop('user', None)
     return redirect(url_for('login'))
 
+@app.route('/service-worker.js')
+def service_worker():
+    return app.send_static_file('service-worker.js')
+
 # Run the app
 if __name__ == '__main__':
     app.run(debug=True)
