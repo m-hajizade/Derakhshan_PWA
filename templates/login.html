@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#4CAF50">
     <style>
         body {
             display: flex;
@@ -12,7 +14,7 @@
             height: 100vh;
             font-family: Arial, sans-serif;
             background: url("{{ url_for('static', filename='login_back.jpg') }}") no-repeat center center fixed;
-            background-size: cover
+            background-size: cover;
         }
 
         .overlay {
@@ -63,10 +65,15 @@
             background: #45a049;
         }
 
+        #installBtn {
+            background: #2196F3;
+            display: none; /* Hidden by default */
+        }
+
         h2 {
             color: white;
             font-size: 24px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Makes text readable */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
         }
     </style>
 </head>
@@ -82,7 +89,40 @@
             <input type="password" name="password" placeholder="Password" required><br>
             <button type="submit">Login</button>
         </form>
+        <button id="installBtn">📲 Install App</button>
     </div>
+
+    <script>
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); // Stop the mini-infobar
+            deferredPrompt = e;
+
+            // Show custom install button
+            const installBtn = document.getElementById('installBtn');
+            installBtn.style.display = 'inline-block';
+
+            installBtn.addEventListener('click', () => {
+                installBtn.style.display = 'none'; // Hide it once clicked
+                deferredPrompt.prompt();
+
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            });
+        });
+
+        // Optional: hide install button if already installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            document.getElementById('installBtn').style.display = 'none';
+        });
+    </script>
 </body>
 </html>
-S
