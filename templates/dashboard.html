@@ -155,7 +155,8 @@
 
         function nextImage() {
             currentIndex = (currentIndex + 1) % totalImages;
-            slider.style.transform = translateX(-${currentIndex * 100}%);
+            slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+
         }
 
         function prevImage() {
